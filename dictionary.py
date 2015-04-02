@@ -4,18 +4,26 @@ import re
 class NotInDictionaryException(Exception):
     pass
 
-class Term(object):
+class SingleTerm(object):
     def __init__(self, match):
         self.value = match.group(0)
 
     def __str__(self):
         return self.value
 
-class SingleTerm(Term):
-    pass
+class MultipleTerm(object):
+    def __init__(self, *args):
+        self.values = args
 
-class MultipleTerm(Term):
-    pass
+    def next(self):
+        try:
+            for v in self.values[0]:
+                yield v
+            self.values.pop(0).group(0)
+        except TypeError:
+            yield self.values.pop(0).group(0)
+        except IndexError:
+            raise StopIteration()
 
 
 class Dictionary:
@@ -23,28 +31,28 @@ class Dictionary:
         with open(dictionary_file, 'r') as f:
             self.dictionary = f.read()
 
-    def find(self, term):
-        if not self.valid_term(term):
-            raise NotInDictionaryException()
-
-        pattern = self.term2pattern(term)
+    def find_by_pattern(self, pattern):
         matches = re.finditer('^' + pattern + '$', self.dictionary, re.I | re.M)
 
         try:
             first = matches.next()
         except StopIteration:
-            raise NotInDictionaryException()
+            raise NotInDictionaryException('pattern was not found')
 
         try:
             second = matches.next()
         except StopIteration:
-            yield SingleTerm(first)
-            return
+            return SingleTerm(first)
 
-        yield MultipleTerm(first)
-        yield MultipleTerm(second)
-        for match in matches:
-            yield MultipleTerm(match)
+        return MultipleTerm(first, second, matches)
+
+    def find_by_term(self, term):
+        if not self.valid_term(term):
+            raise NotInDictionaryException('term is not valid')
+
+        pattern = self.term2pattern(term)
+
+        return self.find_by_pattern(pattern)
 
     @staticmethod
     def valid_pattern(pattern):
