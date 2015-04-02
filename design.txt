@@ -1,0 +1,12 @@
+Numeronym
+
+c8r -ap [-d dict] [-i input] [-o output]
+
+c8r -aD [-d dict] [-i input] [-o output]
+
+-a  allow ambiguous encodings
+-D  decompress
+-d  location of dictionary file, /usr/share/dict/words if not specified
+-i  input file, use stdin if not specified
+-o  output file, use stdout if not specified
+-p  allow pointless substitutions
