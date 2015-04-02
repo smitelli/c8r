@@ -28,7 +28,7 @@ class Dictionary:
             raise NotInDictionaryException()
 
         pattern = self.term2pattern(term)
-        matches = re.finditer(pattern, self.dictionary, re.I | re.M)
+        matches = re.finditer('^' + pattern + '$', self.dictionary, re.I | re.M)
 
         try:
             first = matches.next()
@@ -47,8 +47,31 @@ class Dictionary:
             yield MultipleTerm(match)
 
     @staticmethod
+    def valid_pattern(pattern):
+        return re.search('^[a-z\.]*[a-z][a-z\.]*$', pattern, re.I) is not None
+
+    @staticmethod
     def valid_term(term):
         return term.isalnum() and not term.isdigit()
+
+    @staticmethod
+    def pattern2term(pattern):
+        term = ''
+        counter = 0
+
+        for char in pattern:
+            if char.isalpha():
+                if counter:
+                    term += str(counter)
+                    counter = 0
+                term += char
+            elif char == '.':
+                counter += 1
+
+        if counter:
+            term += str(counter)
+
+        return term
 
     @staticmethod
     def term2pattern(term):
@@ -68,4 +91,4 @@ class Dictionary:
         if counter:
             pattern += '.' * counter
 
-        return '^' + pattern + '$'
+        return pattern
